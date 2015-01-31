@@ -9,7 +9,7 @@ object DataSource {
   /** path to player-game-points parquet file. */
   val playerGamePointsPath = "/user/hive/warehouse/super_football.db/player_game_points/"
   /** SQL for select game-season data. */
-  val gameSeasonSelect = "FROM football.games SELECT gid, seas"
+  val gameSeasonSelect = "SELECT gid, seas FROM football.games"
 
   /** Create an RDD of PlayerGameRecords. */
   def playerGameRddSparkSql(sc: SparkContext): RDD[PlayerGameRecord] = {
@@ -18,9 +18,9 @@ object DataSource {
     playGamePoints.map(row => PlayerGameRecord(row)).cache()
   }
   /** Create an RDD of game-season pairs keyed by game id. */
-  def gamesSeasonHiveSparkSql(sc: SparkContext) = {
+  def gamesSeasonHiveSparkSql(sc: SparkContext): RDD[(Int, Int)] = {
     val hiveSqlContext = new HiveContext(sc)
     val gameSeasonPairs = hiveSqlContext.sql(gameSeasonSelect)
-    gameSeasonPairs.map(row => (row.getInt(0), row.getLong(1)))
+    gameSeasonPairs.map(row => (row.getInt(0), row.getInt(1)))
   }
 }

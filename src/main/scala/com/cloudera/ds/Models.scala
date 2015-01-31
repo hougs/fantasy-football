@@ -14,10 +14,17 @@ case class PlayerGameRecord(playerId: String, game: Int, passingPts: Int,
 }
 
 object PlayerGameRecord {
+  def safeGet[T](row: Row, idx: Int, default: T) = {
+    if (row.isNullAt(idx)) {
+      default
+    } else {
+      row.getAs[T](idx)
+    }
+  }
   /** Convenience function for creating player game record. */
   def apply(row: Row) = {
-    new PlayerGameRecord(row.getString(0), row.getInt(1), row.getInt(2), row.getInt(3),
-      row.getInt(4))
+    new PlayerGameRecord(row.getString(0), safeGet[Int](row, 1, 0), safeGet[Int](row, 2, 0),
+      safeGet[Int](row, 3, 0), safeGet[Int](row, 4, 0))
   }
 }
 
@@ -36,4 +43,4 @@ object PlayerStats {
 }
 
 /** Stats to keep. */
-case class StatSummary(mean: Double, stdDev: Double)
+case class StatSummary(mean: Double, variance: Double)
