@@ -9,5 +9,5 @@ export HADOOP_CONF_DIR=/etc/hive/conf
 
 #And use a special command line option for setting the driver classpath
 spark-submit --class com.cloudera.ds.playerPortfolios --master yarn-client \
---driver-class-path$HIVE_CLASSPATH --conf spark.executor.extraClassPath=$HIVE_CLASSPATH \
+--driver-class-path $HIVE_CLASSPATH --conf spark.executor.extraClassPath=$HIVE_CLASSPATH \
 /home/juliet/fantasy-football-0.0.1-SNAPSHOT.jar
