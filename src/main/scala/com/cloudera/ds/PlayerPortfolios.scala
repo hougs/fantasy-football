@@ -79,7 +79,7 @@ object PlayerPortfolios {
 
   def writeScoredIn2014ToFile(scoredIn2014Rdd: RDD[PlayerYearlyStats]) = {
     val job = new Job()
-    FileOutputFormat.setOutputPath(job, new Path("/Users/juliet/playerYearStats"))
+    FileOutputFormat.setOutputPath(job, new Path("/user/juliet/playerYearStats"))
     AvroParquetOutputFormat.setSchema(job, PlayerYearlyStats.SCHEMA$)
     job.setOutputFormatClass(classOf[AvroParquetOutputFormat])
     scoredIn2014Rdd.map((x) => (null, x)).saveAsNewAPIHadoopDataset(job.getConfiguration)
