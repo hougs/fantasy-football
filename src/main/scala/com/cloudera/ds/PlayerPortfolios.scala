@@ -1,12 +1,17 @@
 package com.cloudera.ds
 
-import com.cloudera.ds.football.avro.PlayerStats
-import org.apache.spark.{SparkConf, SparkContext}
+import com.cloudera.ds.football.avro.PlayerYearlyStats
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.mapreduce.Job
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat
 import org.apache.spark.SparkContext._
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
 import org.apache.spark.rdd.RDD
-import sys.process._
+import org.apache.spark.{SparkConf, SparkContext}
+import parquet.avro.AvroParquetOutputFormat
+
+import scala.sys.process._
 
 
 object PlayerPortfolios {
@@ -49,12 +54,14 @@ object PlayerPortfolios {
     conf
   }
 
+  /**
+   * @return an Rdd of PlayerYearlyStats, filtered by players who scored in 2014
+   */
   def playerStatsWhoScoredIn2014(playerSeasonStats: RDD[((String, Int),
-    SingleYearStats)]): RDD[PlayerStats] = {
+    SingleYearStats)]): RDD[PlayerYearlyStats] = {
     val seasonStatsByPlayersId: RDD[(String, (Int, SingleYearStats))] = playerSeasonStats.map[(String, (Int,
       SingleYearStats))](record => (record._1._1, (record._1._2,
       record._2)))
-
 
     val groupedSeasonStatsByPlayersId: RDD[(String, Map[Int, SingleYearStats])] =
       seasonStatsByPlayersId.groupByKey().mapValues { statsByYear: Iterable[(Int,
@@ -62,13 +69,20 @@ object PlayerPortfolios {
       }
 
     val scoringPlayersOf2014 = groupedSeasonStatsByPlayersId.filter(played2014(_))
-    scoringPlayersOf2014.map[PlayerStats]{record=> PlayerStats.newBuilder().setYear(record._2.)}
-
+    scoringPlayersOf2014.map[PlayerYearlyStats]{record=> Avro.toPlayerYearlyStats(record)}
   }
 
   def played2014(record: (String, Map[Int, SingleYearStats])): Boolean = {
     val playerRecord2014 = record._2(2014)
     playerRecord2014.totalGamesPlayed != 0 && playerRecord2014.totalStats.mean != 0
+  }
+
+  def writeScoredIn2014ToFile(scoredIn2014Rdd: RDD[PlayerYearlyStats]) = {
+    val job = new Job()
+    FileOutputFormat.setOutputPath(job, new Path("/user/juliet/playerYearStats"))
+    AvroParquetOutputFormat.setSchema(job, PlayerYearlyStats.SCHEMA$)
+    job.setOutputFormatClass(classOf[AvroParquetOutputFormat])
+    scoredIn2014Rdd.map((x) => (null, x)).saveAsNewAPIHadoopDataset(job.getConfiguration)
   }
 
 
@@ -84,5 +98,7 @@ object PlayerPortfolios {
     val playerGame = DataSource.playerGameRddSparkSql(sc)
 
     val statsByPlayerSeason = playerSeasonStats(playerGame, gameSeason)
+    val scoredIn2014 = playerStatsWhoScoredIn2014(statsByPlayerSeason)
+    writeScoredIn2014ToFile(scoredIn2014)
   }
 }

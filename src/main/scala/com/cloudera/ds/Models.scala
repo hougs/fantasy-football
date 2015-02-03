@@ -66,6 +66,6 @@ object Avro {
       toStatsByYear(tup._1, tup._2)
     }.toSeq
     val builder = PlayerYearlyStats.newBuilder()
-    new PlayerYearlyStats()(record._1, statsByYear)
+    new PlayerYearlyStats(record._1, statsByYear)
   }
 }

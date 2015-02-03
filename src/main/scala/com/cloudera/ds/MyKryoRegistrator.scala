@@ -1,14 +1,14 @@
 package com.cloudera.ds
 
 
-import com.cloudera.ds.football.avro.Player
+import com.cloudera.ds.football.avro.PlayerYearlyStats
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.SparkConf
 import org.apache.spark.serializer.{KryoRegistrator, KryoSerializer}
 
 class MyKryoRegistrator extends KryoRegistrator {
   override def registerClasses(kryo: Kryo) {
-    kryo.register(classOf[Player])
+    kryo.register(classOf[PlayerYearlyStats])
   }
 }
 
