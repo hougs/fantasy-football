@@ -1,0 +1,22 @@
+@namespace("com.cloudera.ds.football.avro")
+protocol FootballProtocol {
+record StatSummary {
+    double mean;
+    double variance;
+}
+
+record StatsByYear {
+    int year;
+    int totalGamesPlayed;
+    StatSummary passingStats;
+    StatSummary receivingStats;
+    StatSummary rushingStats;
+    StatSummary totalStats;
+}
+
+record PlayerYearlyStats {
+    string playerId;
+    array<StatsByYear> statsByYear;
+}
+
+}
