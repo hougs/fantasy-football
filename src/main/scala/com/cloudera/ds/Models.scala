@@ -1,8 +1,11 @@
 package com.cloudera.ds
 
+import com.cloudera.ds.football.avro.{StatsByYear, PlayerYearlyStats,
+StatSummary => AvroStatSummary}
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
 import org.apache.spark.sql._
+import collection.JavaConversions._
 
 
 case class PlayerGameRecord(playerId: String, game: Int, passingPts: Int,
@@ -28,15 +31,16 @@ object PlayerGameRecord {
   }
 }
 
-case class PlayerStats(totalGamesPlayed: Long, passingStats: StatSummary, rushingStats: StatSummary,
-                       recievingStats: StatSummary, totalStats: StatSummary)
 
-object PlayerStats {
+case class SingleYearStats(totalGamesPlayed: Int, passingStats: StatSummary, rushingStats: StatSummary,
+                       receivingStats: StatSummary, totalStats: StatSummary)
+
+object SingleYearStats {
   /** Convenience function for creating PlayerStats */
-  def apply(statSummary: MultivariateOnlineSummarizer): PlayerStats = {
+  def apply(statSummary: MultivariateOnlineSummarizer): SingleYearStats = {
     val meanArr = statSummary.mean.toArray
     val varArr = statSummary.variance.toArray
-    new PlayerStats(statSummary.count, new StatSummary(meanArr(0), varArr(0)),
+    new SingleYearStats(statSummary.count.toInt, new StatSummary(meanArr(0), varArr(0)),
       new StatSummary(meanArr(1), varArr(1)), new StatSummary(meanArr(2), varArr(2)),
       new StatSummary(meanArr.sum, varArr.sum))
   }
@@ -44,3 +48,24 @@ object PlayerStats {
 
 /** Stats to keep. */
 case class StatSummary(mean: Double, variance: Double)
+
+object Avro {
+  def toStatSummary(record: StatSummary): AvroStatSummary = {
+    new AvroStatSummary(record.mean, record.variance)
+  }
+
+  def toStatsByYear(year: Int, record: SingleYearStats): StatsByYear = {
+    new StatsByYear(year, record.totalGamesPlayed, toStatSummary(record.passingStats),
+      toStatSummary(record.receivingStats), toStatSummary(record.rushingStats),
+      toStatSummary(record.totalStats))
+  }
+
+  def toPlayerYearlyStats(record: (String, Map[Int, SingleYearStats])): PlayerYearlyStats = {
+    val playerId = record._1
+    val statsByYear: java.util.List[StatsByYear] = record._2.map{ tup: (Int, SingleYearStats) =>
+      toStatsByYear(tup._1, tup._2)
+    }.toSeq
+    val builder = PlayerYearlyStats.newBuilder()
+    new PlayerYearlyStats()(record._1, statsByYear)
+  }
+}
