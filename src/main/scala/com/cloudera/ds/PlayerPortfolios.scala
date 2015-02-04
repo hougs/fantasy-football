@@ -67,14 +67,35 @@ object PlayerPortfolios {
     val scoringPlayersOf2014 = groupedSeasonStatsByPlayersId.filter(played2014(_))
     scoringPlayersOf2014.map[PlayerYearlyStats]{record=> Avro.toPlayerYearlyStats(record)}
   }
-
+  /** A filter function to determine which players scored points in 2014. */
   def played2014(record: (String, Map[Int, SingleYearStats])): Boolean = {
-    val playerRecord2014 = record._2(2014)
-    playerRecord2014.totalGamesPlayed != 0 && playerRecord2014.totalStats.mean != 0
+    record._2.keySet.exists(_ == 2014)
+  }
+  /** Normalize player positions by possible positions in roster. */
+  def translatePosToRosterPos(origPosition: String): String = origPosition match {
+    case "RB" => "RB"
+    case "QB" => "QB"
+    case "DB" => "DEF"
+    case "DL" => "DEF"
+    case "K" => "K"
+    case "LB" => "DEF"
+    case "OL" => "OFF"
+    case "TE" => "TE"
+    case "WR" => "WR"
+    case "LS" => "LS"
+  }
+  /** Function to filter out players not in draftwprthy positions. */
+  def draftworthyPosition(tuple: (String, String)): Boolean = {
+    tuple._2 != "OFF" && tuple._2 != "LS"
   }
 
+  def normalizePosition(rdd: RDD[(String, String)]) = {
+    rdd.mapValues(translatePosToRosterPos(_)).filter(draftworthyPosition(_))
+  }
 
-
+  def countByPosition(rdd: RDD[(String, String)]): RDD[(String, Int)] = {
+    rdd.map(tuple => (tuple._2, 1)).reduceByKey((a, b) => a + b)
+  }
 
   /** Entry point to this Spark job. */
   def main(args: Array[String]) {
@@ -84,11 +105,17 @@ object PlayerPortfolios {
     }
 
     val sc = new SparkContext(configure(master))
+    /** Read in Data */
     val gameSeason = DataIO.gamesSeasonHiveSparkSql(sc)
     val playerGame = DataIO.playerGameRddSparkSql(sc)
+    val playerPosition = normalizePosition(DataIO.playerPositionHiveSparkSql(sc))
 
     val statsByPlayerSeason = playerSeasonStats(playerGame, gameSeason)
     val scoredIn2014 = playerStatsWhoScoredIn2014(statsByPlayerSeason)
+    val positionCounts = countByPosition(playerPosition)
+    /** Write out file of counts by position. */
+    DataIO.writePositionCounts(positionCounts)
+    /** Write out file of stats for players who scored in 2014. */
     DataIO.writeScoredIn2014ToFile(scoredIn2014)
   }
 }
