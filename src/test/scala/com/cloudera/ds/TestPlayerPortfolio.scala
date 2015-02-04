@@ -12,7 +12,7 @@ class TestPlayerPortfolio extends SparkTestUtils with ShouldMatchers {
       new PlayerGameRecord("foo", 1, 0, 1, 3),
       new PlayerGameRecord("bar", 2, 0, 2, 1)))
     val gameSeasonRdd = sc.parallelize(List((1, 2001), (2, 2002)))
-    val pairs: scala.collection.Map[(String, Int), SingleYearStats] = PlayerPortfolios
+    val pairs: scala.collection.Map[(String, Int), SingleYearStats] = Munge
       .playerSeasonStats(playerGameRdd, gameSeasonRdd).collectAsMap()
     pairs should have size 2
     pairs should contain key (("foo", 2001))

@@ -1,5 +1,6 @@
 package com.cloudera.ds
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.sys.process._
@@ -39,11 +40,12 @@ object PlayerPortfolios {
     /** Read in Data */
     val gameSeason = DataIO.gamesSeasonHiveSparkSql(sc)
     val playerGame = DataIO.playerGameRddSparkSql(sc)
-    val playerPosition = Munge.normalizePosition(DataIO.playerPositionHiveSparkSql(sc))
-
-    val statsByPlayerSeason = Munge.playerSeasonStats(playerGame, gameSeason)
-    val scoredIn2014 = Munge.playerStatsWhoScoredIn2014(statsByPlayerSeason)
-    val positionCounts = Munge.countByPosition(playerPosition)
+    /** Normailze different types of positions in to ones we care about in fantasy football. */
+    val playerPosition: RDD[(String, String)] = Munge.normalizePosition(DataIO
+      .playerPositionHiveSparkSql(sc))
+    val statsByPlayerSeason: RDD[((String, Int), SingleYearStats)]  = Munge.playerSeasonStats(playerGame, gameSeason)
+    val scoredIn2014: RDD[(String, Map[Int, SingleYearStats])]  = Munge.playerStatsWhoScoredIn2014(statsByPlayerSeason)
+    val positionCounts: RDD[(String, Int)] = Munge.countByPosition(playerPosition)
     /** Write out file of counts by position. */
     DataIO.writePositionCounts(positionCounts)
     /** Write out file of stats for players who scored in 2014. */

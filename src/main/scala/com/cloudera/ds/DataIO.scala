@@ -42,7 +42,8 @@ object DataIO {
     hiveSqlContext.sql(playerPositionSelect).map(row => (row.getString(0), row.getString(1)))
   }
 
-  def writeScoredIn2014ToFile(scoredIn2014Rdd: RDD[PlayerYearlyStats]) = {
+  def writeScoredIn2014ToFile(scoredIn2014Rdd: RDD[(String, Map[Int, SingleYearStats])]) = {
+    scoredIn2014Rdd.map[PlayerYearlyStats]{record=> Avro.toPlayerYearlyStats(record)}
     val job = new Job()
     FileOutputFormat.setOutputPath(job, new Path(yearlyStatsPath))
     AvroParquetOutputFormat.setSchema(job, PlayerYearlyStats.SCHEMA$)

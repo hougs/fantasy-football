@@ -1,6 +1,5 @@
 package com.cloudera.ds
 
-import com.cloudera.ds.football.avro.PlayerYearlyStats
 import org.apache.spark.SparkContext._
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
@@ -55,7 +54,7 @@ object Munge {
     tuple._2 != "OFF" && tuple._2 != "LS"
   }
 
-  def normalizePosition(rdd: RDD[(String, String)]) = {
+  def normalizePosition(rdd: RDD[(String, String)]): RDD[(String, String)] = {
     rdd.mapValues(translatePosToRosterPos(_)).filter(draftworthyPosition(_))
   }
 
@@ -67,7 +66,7 @@ object Munge {
    * @return an Rdd of PlayerYearlyStats, filtered by players who scored in 2014
    */
   def playerStatsWhoScoredIn2014(playerSeasonStats: RDD[((String, Int),
-    SingleYearStats)]): RDD[PlayerYearlyStats] = {
+    SingleYearStats)]): RDD[(String, Map[Int, SingleYearStats])] = {
     val seasonStatsByPlayersId: RDD[(String, (Int, SingleYearStats))] = playerSeasonStats.map[(String, (Int,
       SingleYearStats))](record => (record._1._1, (record._1._2,
       record._2)))
@@ -77,7 +76,6 @@ object Munge {
         SingleYearStats)] => statsByYear.toMap
       }
 
-    val scoringPlayersOf2014 = groupedSeasonStatsByPlayersId.filter(played2014(_))
-    scoringPlayersOf2014.map[PlayerYearlyStats]{record=> Avro.toPlayerYearlyStats(record)}
+    groupedSeasonStatsByPlayersId.filter(played2014(_))
   }
 }
