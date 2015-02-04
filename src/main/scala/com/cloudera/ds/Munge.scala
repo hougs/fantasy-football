@@ -49,7 +49,7 @@ object Munge {
     case "WR" => "WR"
     case "LS" => "LS"
   }
-  /** Function to filter out players not in draftwprthy positions. */
+  /** Function to filter out players not in draftworthy positions. */
   def draftworthyPosition(tuple: (String, String)): Boolean = {
     tuple._2 != "OFF" && tuple._2 != "LS"
   }
