@@ -48,6 +48,7 @@ object PlayerPortfolios {
     val positionCounts: RDD[(String, Int)] = Munge.countByPosition(playerPosition)
     /** Generate all roster combinations. */
     val rosters = GeneratePortfolio.genererate(scoredIn2014, playerPosition)
+    rosters.map(_.toString()).take(10).foreach(println(_))
     /** Write out file of counts by position. */
     DataIO.writePositionCounts(positionCounts)
     /** Write out file of stats for players who scored in 2014. */
