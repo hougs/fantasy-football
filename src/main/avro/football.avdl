@@ -19,4 +19,18 @@ record PlayerYearlyStats {
     array<StatsByYear> statsByYear;
 }
 
+record RosterStats {
+    string qb;
+    string rb1;
+    string rb2;
+    string wr1;
+    string wr2;
+    string te;
+    string k;
+    string flex;
+    string def;
+    double meanTotal;
+    double varianceTotal;
+}
+
 }
