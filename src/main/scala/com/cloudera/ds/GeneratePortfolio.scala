@@ -27,8 +27,21 @@ object GeneratePortfolio {
     val defense = positionFilterTransfrom("DEF", playerPositionStats)
     val wr = positionFilterTransfrom("WR", playerPositionStats)
     val wrterb = wr.union(te).union(rb)
-    Map(("RB", rb),("QB", qb), ("TE", te), ("K", k), ("DEF", defense), ("WR", wr), ("WR/TE/RB",
-      wrterb))
+    Map(("RB", rb),("QB", qb), ("TE", te), ("K", k), ("DEF", defense), ("WR", wr),
+      ("WR/TE/RB", wrterb))
+  }
+
+  def takeTopPlayers(positionRddTup: (String, RDD[PlayerYearlyStats])): (String,
+    Array[PlayerYearlyStats]) = {
+    val topPlayersPerPosition = Map("RB" -> 15, "QB" -> 10, "WR" -> 15, "DEF"->10, "K" -> 10,
+      "TE" -> 10, "WR/TE/RB" -> 10)
+    val numberToTake = topPlayersPerPosition(positionRddTup._1)
+    val inMem = positionRddTup._2.takeOrdered(numberToTake)(PlayerYearlyStatsOrdering)
+    (positionRddTup._1, inMem)
+  }
+
+  def filterByTopPerformers(playerStatsByPosition: Map[String, RDD[PlayerYearlyStats]]): Map[String, Array[PlayerYearlyStats]]= {
+    playerStatsByPosition.map(takeTopPlayers(_))
   }
 
   /** Cartesian product these all together.  We need to choose N for the following positions:
@@ -48,6 +61,7 @@ object GeneratePortfolio {
       .cartesian(inputRddMap("WR/TE/RB"))
   }
 
+  /** I feel mildly ashamed for having written this function, but it was neccesary.*/
   def flatten[A](tuple: ((((((((A, A), A), A), A), A), A), A), A)): List[A] = {
     List(tuple._1._1._1._1._1._1._1._1, tuple._1._1._1._1._1._1._1._2, tuple._1._1._1._1._1._1._2,
       tuple._1._1._1._1._1._2, tuple._1._1._1._1._2, tuple._1._1._1._2, tuple._1._1._2, tuple._1._2,
@@ -65,11 +79,15 @@ object GeneratePortfolio {
     allRosters.filter(filterDuplicatePlayers(_))
   }
 
-  /** Generates an Rdd of all unique combinations of valid rosters for fantasy football. */
-  def genererate(playerStats: RDD[(String, Map[Int, SingleYearStats])], playerPosition: RDD[(String,
-    String)]): RDD[List[PlayerYearlyStats]] = {
+  def topPerformersByPosition(playerStats: RDD[(String, Map[Int, SingleYearStats])], playerPosition: RDD[(String,
+    String)]): Map[String, Array[PlayerYearlyStats]] = {
     val mapOfRdds = groupsToRecombine(playerStats, playerPosition)
-    val combined: RDD[List[PlayerYearlyStats]] = combine(mapOfRdds).map(flatten[PlayerYearlyStats]
+    filterByTopPerformers(mapOfRdds)
+  }
+
+  /** Generates an Rdd of all unique combinations of valid rosters for fantasy football. */
+  def uniqueRosters(inputRddMap: Map[String, RDD[PlayerYearlyStats]]): RDD[List[PlayerYearlyStats]] = {
+    val combined: RDD[List[PlayerYearlyStats]] = combine(inputRddMap).map(flatten[PlayerYearlyStats]
       (_))
     deduplicatePlayersFromRoster(combined)
   }

@@ -69,3 +69,20 @@ object Avro {
     new PlayerYearlyStats(record._1, statsByYear)
   }
 }
+
+object PlayerYearlyStatsOrdering extends Ordering[PlayerYearlyStats] {
+
+  def extractAveFantasyPoints(record: PlayerYearlyStats): Double = {
+    val stats2014: Option[StatsByYear] = record.getStatsByYear.find(statsByYear => statsByYear
+      .getYear == 2014)
+
+    stats2014 match {
+      case Some(record) => record.getTotalStats.getMean
+      case None => 0.0
+    }
+  }
+
+  def compare(a: PlayerYearlyStats, b: PlayerYearlyStats) = {
+    extractAveFantasyPoints(a) compareTo extractAveFantasyPoints(b)
+  }
+}

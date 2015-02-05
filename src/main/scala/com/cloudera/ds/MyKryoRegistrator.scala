@@ -1,7 +1,7 @@
 package com.cloudera.ds
 
 
-import com.cloudera.ds.football.avro.PlayerYearlyStats
+import com.cloudera.ds.football.avro.{StatsByYear, PlayerYearlyStats}
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.SparkConf
 import org.apache.spark.serializer.{KryoRegistrator, KryoSerializer}
@@ -9,6 +9,8 @@ import org.apache.spark.serializer.{KryoRegistrator, KryoSerializer}
 class MyKryoRegistrator extends KryoRegistrator {
   override def registerClasses(kryo: Kryo) {
     kryo.register(classOf[PlayerYearlyStats])
+    kryo.register(classOf[StatsByYear])
+    kryo.register(classOf[StatSummary])
   }
 }
 

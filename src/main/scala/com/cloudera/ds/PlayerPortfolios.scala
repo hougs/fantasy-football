@@ -1,5 +1,6 @@
 package com.cloudera.ds
 
+import com.cloudera.ds.football.avro.PlayerYearlyStats
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -7,8 +8,6 @@ import scala.sys.process._
 
 
 object PlayerPortfolios {
-
-
 
   def getHiveJars(): String = {
     val result: String = "find /opt/cloudera/parcels/CDH-5.3.0-1.cdh5.3.0.p0.30/lib/hive/lib/ " +
@@ -25,9 +24,6 @@ object PlayerPortfolios {
     MyKryoRegistrator.register(conf)
     conf
   }
-
-
-
 
   /** Entry point to this Spark job. */
   def main(args: Array[String]) {
@@ -47,8 +43,11 @@ object PlayerPortfolios {
     val scoredIn2014: RDD[(String, Map[Int, SingleYearStats])]  = Munge.playerStatsWhoScoredIn2014(statsByPlayerSeason)
     val positionCounts: RDD[(String, Int)] = Munge.countByPosition(playerPosition)
     /** Generate all roster combinations. */
-    val rosters = GeneratePortfolio.genererate(scoredIn2014, playerPosition)
-    rosters.map(_.toString()).take(10).foreach(println(_))
+    val topPlayersByPos: Map[String, Array[PlayerYearlyStats]] = GeneratePortfolio
+      .topPerformersByPosition(scoredIn2014, playerPosition)
+    val topPlayersRdds = topPlayersByPos.map(tup => (tup._1, sc.parallelize(tup._2)))
+    val rosters: RDD[List[PlayerYearlyStats]] = GeneratePortfolio.uniqueRosters(topPlayersRdds)
+    rosters.map(_.toString).saveAsTextFile("/user/juliet/football/roster")
     /** Write out file of counts by position. */
     DataIO.writePositionCounts(positionCounts)
     /** Write out file of stats for players who scored in 2014. */
