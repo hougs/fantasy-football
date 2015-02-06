@@ -1,6 +1,6 @@
 package com.cloudera.ds
 
-import com.cloudera.ds.football.avro.PlayerYearlyStats
+import com.cloudera.ds.football.avro.{RosterStats, PlayerYearlyStats}
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.mapreduce.Job
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat
@@ -18,6 +18,8 @@ object DataIO {
   val yearlyStatsPath= "/user/juliet/football/playerYearStats"
   /** path to counts of players by position. */
   val countByPositionPath = "/user/juliet/football/positionCounts"
+  /** path to rosters. */
+  val rosterStatsPath = "/user/juliet/football/rosterStats"
 
   /** SQL for select game-season data. */
   val gameSeasonSelect = "SELECT gid, seas FROM football.games"
@@ -43,12 +45,21 @@ object DataIO {
   }
 
   def writeScoredIn2014ToFile(scoredIn2014Rdd: RDD[(String, Map[Int, SingleYearStats])]) = {
-    scoredIn2014Rdd.map[PlayerYearlyStats]{record=> Avro.toPlayerYearlyStats(record)}
+    val scored = scoredIn2014Rdd.map[PlayerYearlyStats](Avro.toPlayerYearlyStats)
     val job = new Job()
     FileOutputFormat.setOutputPath(job, new Path(yearlyStatsPath))
     AvroParquetOutputFormat.setSchema(job, PlayerYearlyStats.SCHEMA$)
     job.setOutputFormatClass(classOf[AvroParquetOutputFormat])
-    scoredIn2014Rdd.map((x) => (null, x)).saveAsNewAPIHadoopDataset(job.getConfiguration)
+    scored.map((x) => (null, x)).saveAsNewAPIHadoopDataset(job.getConfiguration)
+  }
+
+  def writeRosters(rdd: RDD[List[PlayerYearlyStats]]) = {
+    val avroifiedRecords = rdd.map(Avro.toRosterStats)
+    val job = new Job()
+    FileOutputFormat.setOutputPath(job, new Path(rosterStatsPath))
+    AvroParquetOutputFormat.setSchema(job, RosterStats.SCHEMA$)
+    job.setOutputFormatClass(classOf[AvroParquetOutputFormat])
+    avroifiedRecords.map((x) => (null, x)).saveAsNewAPIHadoopDataset(job.getConfiguration)
   }
 
   def writePositionCounts(rdd: RDD[(String, Int)]) = {

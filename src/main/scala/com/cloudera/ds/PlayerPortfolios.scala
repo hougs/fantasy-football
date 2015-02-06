@@ -36,6 +36,7 @@ object PlayerPortfolios {
     /** Read in Data */
     val gameSeason = DataIO.gamesSeasonHiveSparkSql(sc)
     val playerGame = DataIO.playerGameRddSparkSql(sc)
+
     /** Normalize different types of positions in to ones we care about in fantasy football. */
     val playerPosition: RDD[(String, String)] = Munge.normalizePosition(DataIO
       .playerPositionHiveSparkSql(sc))
@@ -47,7 +48,9 @@ object PlayerPortfolios {
       .topPerformersByPosition(scoredIn2014, playerPosition)
     val topPlayersRdds = topPlayersByPos.map(tup => (tup._1, sc.parallelize(tup._2)))
     val rosters: RDD[List[PlayerYearlyStats]] = GeneratePortfolio.uniqueRosters(topPlayersRdds)
-    rosters.map(_.toString).saveAsTextFile("/user/juliet/football/roster")
+
+    /** Write out rosters */
+    DataIO.writeRosters(rosters)
     /** Write out file of counts by position. */
     DataIO.writePositionCounts(positionCounts)
     /** Write out file of stats for players who scored in 2014. */

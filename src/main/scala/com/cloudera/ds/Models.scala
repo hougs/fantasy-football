@@ -1,7 +1,7 @@
 package com.cloudera.ds
 
-import com.cloudera.ds.football.avro.{StatsByYear, PlayerYearlyStats,
-StatSummary => AvroStatSummary}
+import com.cloudera.ds.football.avro.{StatSummary => AvroStatSummary, RosterStats, StatsByYear,
+PlayerYearlyStats}
 import org.apache.spark.mllib.linalg.{Vectors, Vector}
 import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
 import org.apache.spark.sql._
@@ -67,6 +67,39 @@ object Avro {
     }.toSeq
     val builder = PlayerYearlyStats.newBuilder()
     new PlayerYearlyStats(record._1, statsByYear)
+  }
+
+  def getMean(optionalStats: Option[StatsByYear]): Double = {
+    optionalStats match {
+      case Some(stats) => stats.getTotalStats.getMean
+      case None => 0.0
+    }
+  }
+
+  def getVar(optionalStats: Option[StatsByYear]): Double = {
+    optionalStats match {
+      case Some(stats) => stats.getTotalStats.getVariance
+      case None => 0.0
+    }
+  }
+
+  def toRosterStats(listOfPlayers: List[PlayerYearlyStats]) = {
+    val qb = listOfPlayers(0)
+    val rb1 = listOfPlayers(1)
+    val rb2 = listOfPlayers(2)
+    val wr1 = listOfPlayers(3)
+    val wr2 = listOfPlayers(4)
+    val k = listOfPlayers(5)
+    val defense = listOfPlayers(6)
+    val te = listOfPlayers(7)
+    val flex = listOfPlayers(8)
+
+    val stats: List[Option[StatsByYear]] = listOfPlayers.map(elem => elem.getStatsByYear().find(e
+      => e.getYear == 2014))
+
+    new RosterStats(qb.getPlayerId, rb1.getPlayerId, rb2.getPlayerId, wr1.getPlayerId,
+      wr2.getPlayerId, te.getPlayerId, k.getPlayerId, flex.getPlayerId, defense.getPlayerId,
+      stats.map(getMean).sum, stats.map(getVar).sum)
   }
 }
 
