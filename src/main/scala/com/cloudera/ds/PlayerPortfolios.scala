@@ -44,14 +44,18 @@ object PlayerPortfolios {
     val scoredIn2014: RDD[(String, Map[Int, SingleYearStats])]  = Munge.playerStatsWhoScoredIn2014(statsByPlayerSeason)
     val positionCounts: RDD[(String, Int)] = Munge.countByPosition(playerPosition)
     /** Generate all roster combinations. */
-    val topPlayersByPos: Map[String, Array[PlayerYearlyStats]] = GeneratePortfolio
-      .topPerformersByPosition(scoredIn2014, playerPosition)
-    print(topPlayersByPos("RB").deep.mkString(",\n"))
-    val topPlayersRdds = topPlayersByPos.map(tup => (tup._1, sc.parallelize(tup._2)))
-    val rosters: RDD[List[PlayerYearlyStats]] = GeneratePortfolio.uniqueRosters(topPlayersRdds)
+    val groupsToRecombine: Map[String, RDD[PlayerYearlyStats]] = GeneratePortfolio.groupsToRecombine(scoredIn2014, playerPosition)
+
+    //val topPlayersByPos: Map[String, Array[PlayerYearlyStats]] = GeneratePortfolio
+    //  .topPerformersByPosition(scoredIn2014, playerPosition)
+    //print("XXXXXXXXXXX" + topPlayersByPos("RB").deep.mkString(",\n"))
+    //val topPlayersRdds = topPlayersByPos.map(tup => (tup._1, sc.parallelize(tup._2)))
+    //val rosters: RDD[List[PlayerYearlyStats]] = GeneratePortfolio.uniqueRosters(topPlayersRdds)
 
     /** Write out rosters */
-    DataIO.writeRosters(rosters)
+    //DataIO.writeRosters(rosters)
+    /** Write stats by position. */
+    DataIO.writePositionStats(groupsToRecombine)
     /** Write out file of counts by position. */
     DataIO.writePositionCounts(positionCounts)
     /** Write out file of stats for players who scored in 2014. */

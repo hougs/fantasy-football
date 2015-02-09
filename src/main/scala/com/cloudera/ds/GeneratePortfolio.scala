@@ -33,8 +33,8 @@ object GeneratePortfolio {
 
   def takeTopPlayers(positionRddTup: (String, RDD[PlayerYearlyStats])): (String,
     Array[PlayerYearlyStats]) = {
-    val topPlayersPerPosition = Map("RB" -> 15, "QB" -> 10, "WR" -> 15, "DEF"->10, "K" -> 10,
-      "TE" -> 10, "WR/TE/RB" -> 10)
+    val topPlayersPerPosition = Map("RB" -> 5, "QB" -> 5, "WR" -> 5, "DEF"->5, "K" -> 3,
+      "TE" -> 4, "WR/TE/RB" -> 4)
     val numberToTake = topPlayersPerPosition(positionRddTup._1)
     val inMem = positionRddTup._2.takeOrdered(numberToTake)(PlayerYearlyStatsOrdering)
     (positionRddTup._1, inMem)
