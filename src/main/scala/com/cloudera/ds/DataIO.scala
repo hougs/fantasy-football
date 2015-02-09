@@ -13,7 +13,7 @@ import parquet.avro.AvroParquetOutputFormat
 
 object DataIO {
   /** path to player-game-points parquet file. */
-  val playerGamePointsPath = "/user/hive/warehouse/super_football.db/player_game_points/"
+  val playerGamePointsPath = "/user/hive/warehouse/super_football_new.db/player_game_points/"
   /** path to per Player yearly stats. */
   val yearlyStatsPath= "/user/juliet/football/playerYearStats"
   /** path to counts of players by position. */
@@ -36,12 +36,13 @@ object DataIO {
   def gamesSeasonHiveSparkSql(sc: SparkContext): RDD[(Int, Int)] = {
     val hiveSqlContext = new HiveContext(sc)
     val gameSeasonPairs = hiveSqlContext.sql(gameSeasonSelect)
-    gameSeasonPairs.map(row => (row.getInt(0), row.getInt(1)))
+    gameSeasonPairs.map(row => (Models.safeGet(row, 0, -9), Models.safeGet(row, 0, -9)))
   }
 
   def playerPositionHiveSparkSql(sc: SparkContext): RDD[(String, String)] = {
     val hiveSqlContext = new HiveContext(sc)
-    hiveSqlContext.sql(playerPositionSelect).map(row => (row.getString(0), row.getString(1)))
+    hiveSqlContext.sql(playerPositionSelect).map(row => (Models.safeGet[String](row, 0,
+      ""), Models.safeGet(row, 0, "")))
   }
 
   def writeScoredIn2014ToFile(scoredIn2014Rdd: RDD[(String, Map[Int, SingleYearStats])]) = {

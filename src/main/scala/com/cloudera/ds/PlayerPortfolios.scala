@@ -46,6 +46,7 @@ object PlayerPortfolios {
     /** Generate all roster combinations. */
     val topPlayersByPos: Map[String, Array[PlayerYearlyStats]] = GeneratePortfolio
       .topPerformersByPosition(scoredIn2014, playerPosition)
+    print(topPlayersByPos("RB").deep.mkString(",\n"))
     val topPlayersRdds = topPlayersByPos.map(tup => (tup._1, sc.parallelize(tup._2)))
     val rosters: RDD[List[PlayerYearlyStats]] = GeneratePortfolio.uniqueRosters(topPlayersRdds)
 

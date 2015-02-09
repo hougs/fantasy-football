@@ -48,6 +48,7 @@ object Munge {
     case "TE" => "TE"
     case "WR" => "WR"
     case "LS" => "LS"
+    case _ => ""
   }
   /** Function to filter out players not in draftworthy positions. */
   def draftworthyPosition(tuple: (String, String)): Boolean = {

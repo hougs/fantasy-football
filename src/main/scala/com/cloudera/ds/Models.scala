@@ -8,6 +8,16 @@ import org.apache.spark.sql._
 import collection.JavaConversions._
 
 
+object Models {
+  def safeGet[T](row: Row, idx: Int, default: T) = {
+    if (row.isNullAt(idx)) {
+      default
+    } else {
+      row.getAs[T](idx)
+    }
+  }
+}
+
 case class PlayerGameRecord(playerId: String, game: Int, passingPts: Int,
                             rushingPts: Int, recievingPts: Int) {
   /** Returns type expected by MultivariateOnlineSummarizer. */
@@ -17,17 +27,11 @@ case class PlayerGameRecord(playerId: String, game: Int, passingPts: Int,
 }
 
 object PlayerGameRecord {
-  def safeGet[T](row: Row, idx: Int, default: T) = {
-    if (row.isNullAt(idx)) {
-      default
-    } else {
-      row.getAs[T](idx)
-    }
-  }
   /** Convenience function for creating player game record. */
   def apply(row: Row) = {
-    new PlayerGameRecord(row.getString(0), safeGet[Int](row, 1, 0), safeGet[Int](row, 2, 0),
-      safeGet[Int](row, 3, 0), safeGet[Int](row, 4, 0))
+    new PlayerGameRecord(row.getString(0), Models.safeGet[Int](row, 1, 0),
+      Models.safeGet[Int](row, 2, 0), Models.safeGet[Int](row, 3, 0), Models.safeGet[Int](row, 4,
+        0))
   }
 }
 
