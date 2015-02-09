@@ -1,5 +1,5 @@
 
-use super_football;
+use super_football_new;
 
 CREATE TABLE IF NOT EXISTS passing_sess AS
 SELECT a.psr as player,
@@ -8,11 +8,11 @@ collect_all(named_struct(
   'gid', b.gid,
   'yds', a.yds,
   'intcpt', cast(e.pid is not null as int),
-  'td', cast(coalesce(c.pts, false) as int),
+  'td', cast(coalesce(c.pts, 0) as int),
   'conv', cast(d.pid is not null as int))) as passes
 FROM football.pass a
 INNER JOIN football.core b ON a.pid = b.pid
-LEFT JOIN football.scoring c on a.pid = c.pid
+LEFT JOIN football.scoring_14 c on a.pid = c.pid
 LEFT JOIN football.convs d ON a.pid = d.pid
 LEFT JOIN football.ints e ON a.pid = e.pid
 WHERE a.psr <> 'XX-0000'
@@ -24,11 +24,11 @@ collect_all(named_struct(
   'pid', a.pid,
   'yds', a.yds,
   'intcpt', cast(e.pid is not null as int),
-  'td', cast(coalesce(c.pts, false) as int),
+  'td', cast(coalesce(c.pts, 0) as int),
   'conv', cast(d.pid is not null as int))) as passes
 FROM football.pass a
 INNER JOIN football.core b ON a.pid = b.pid
-LEFT JOIN football.scoring c on a.pid = c.pid
+LEFT JOIN football.scoring_14 c on a.pid = c.pid
 LEFT JOIN football.convs d ON a.pid = d.pid
 LEFT JOIN football.ints e ON a.pid = e.pid
 WHERE a.psr <> 'XX-0000'
@@ -40,11 +40,11 @@ collect_all(named_struct(
   'pid', a.pid,
   'gid', b.gid,
   'yds', a.yds,
-  'td', cast(coalesce(c.pts, false) as int),
+  'td', cast(coalesce(c.pts, 0) as int),
   'conv', cast(d.pid is not null as int))) as rushes
 FROM football.rush a
 INNER JOIN football.core b ON a.pid = b.pid
-LEFT JOIN football.scoring c on a.pid = c.pid
+LEFT JOIN football.scoring_14 c on a.pid = c.pid
 LEFT JOIN football.convs d ON a.pid = d.pid
 LEFT JOIN football.fumbles e ON a.pid = e.pid
 WHERE e.pid IS NULL AND a.bc <> 'XX-0000'
@@ -55,11 +55,11 @@ SELECT a.bc as player, b.gid,
 collect_all(named_struct(
   'pid', a.pid,
   'yds', a.yds,
-  'td', cast(coalesce(c.pts, false) as int),
+  'td', cast(coalesce(c.pts, 0) as int),
   'conv', cast(d.pid is not null as int))) as rushes
 FROM football.rush a
 INNER JOIN football.core b ON a.pid = b.pid
-LEFT JOIN football.scoring c on a.pid = c.pid
+LEFT JOIN football.scoring_14 c on a.pid = c.pid
 LEFT JOIN football.convs d ON a.pid = d.pid
 LEFT JOIN football.fumbles e ON a.pid = e.pid
 WHERE e.pid IS NULL AND a.bc <> 'XX-0000'
@@ -71,11 +71,11 @@ collect_all(named_struct(
   'pid', a.pid,
   'gid', b.gid,
   'yds', a.yds,
-  'td', cast(coalesce(c.pts, false) as int),
+  'td', cast(coalesce(c.pts, 0) as int),
   'conv', cast(d.pid is not null as int))) as receptions
 FROM football.pass a
 INNER JOIN football.core b ON a.pid = b.pid
-LEFT JOIN football.scoring c on a.pid = c.pid
+LEFT JOIN football.scoring_14 c on a.pid = c.pid
 LEFT JOIN football.convs d ON a.pid = d.pid
 LEFT JOIN football.ints e ON a.pid = e.pid
 WHERE e.pid IS NULL AND a.trg <> 'XX-0000'
@@ -86,11 +86,11 @@ SELECT a.trg as player, b.gid,
 collect_all(named_struct(
   'pid', a.pid,
   'yds', a.yds,
-  'td', cast(coalesce(c.pts, false) as int),
+  'td', cast(coalesce(c.pts, 0) as int),
   'conv', cast(d.pid is not null as int))) as receptions
 FROM football.pass a
 INNER JOIN football.core b ON a.pid = b.pid
-LEFT JOIN football.scoring c on a.pid = c.pid
+LEFT JOIN football.scoring_14 c on a.pid = c.pid
 LEFT JOIN football.convs d ON a.pid = d.pid
 LEFT JOIN football.ints e ON a.pid = e.pid
 WHERE e.pid IS NULL AND a.trg <> 'XX-0000'

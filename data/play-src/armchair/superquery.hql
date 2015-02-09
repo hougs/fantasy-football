@@ -1,3 +1,5 @@
+USE super_football_new;
+
 CREATE TABLE player_game_points
 STORED AS PARQUET
 AS SELECT a.player, a.gid,
