@@ -21,7 +21,7 @@ trait SparkTestUtils extends FunSuite {
    */
   def sparkTest(name: String, silenceSpark : Boolean = true)(body: => Unit) {
     test(name, SparkTest){
-      sc = new SparkContext("local[4]", name)
+      sc = new SparkContext(PlayerPortfolios.configure("local[4]"))
       try {
         body
       }
