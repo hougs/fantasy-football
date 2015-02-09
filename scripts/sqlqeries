@@ -1,0 +1,20 @@
+create table player_prediction as select player_game_points.player as player, games.seas as seas,
+sum(coalesce(passing, 0) + coalesce(rushing, 0) + coalesce(receiving,0)) as totalPts,
+stddev_pop(coalesce(passing, 0) + coalesce(rushing, 0) + coalesce(receiving,0)) as stddev, players.pos1 from player_game_points left join games on
+player_game_points.gid = games.gid left join players on players.player = player_game_points.player group by player_game_points.player, players.pos1, games.seas;
+
+create table super_football_new.players as select * from football.players;
+create table super_football_new.games as select gid, seas from football.games;
+
+hive -e "use super_football_new;select players.player, player_pos_predict.seas, player_pos_predict.totalPts, player_pos_predict.stddev from player_pos_predict join players on players.player = player_pos_predict.player where player_pos_predict.pos1='WR'" > ~/temp/WR.txt
+
+
+hive -e "use super_football_new;select players.player, player_pos_predict.seas, player_pos_predict.totalPts, player_pos_predict.stddev from player_pos_predict join players on players.player = player_pos_predict.player where player_pos_predict.pos1='RB'" > ~/temp/RB.txt
+
+hive -e "use super_football_new;select players.player, player_pos_predict.seas, player_pos_predict.totalPts, player_pos_predict.stddev from player_pos_predict join players on players.player = player_pos_predict.player where player_pos_predict.pos1='QB'" > ~/temp/QB.txt
+
+hive -e "use super_football_new;select players.player, player_pos_predict.seas, player_pos_predict.totalPts, player_pos_predict.stddev from player_pos_predict join players on players.player = player_pos_predict.player where player_pos_predict.pos1='TE" > ~/temp/TE.txt
+
+
+
+
