@@ -1,6 +1,7 @@
 *.class
 *.log
-
+#ignore proprietary data
+data/proprietary/
 #maven
 target/
 
